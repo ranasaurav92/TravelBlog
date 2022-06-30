@@ -15,7 +15,8 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.android.material.textfield.TextInputLayout;
 
-import org.w3c.dom.Text;
+import java.util.Objects;
+
 
 public class LoginActivity extends AppCompatActivity {
 
@@ -24,9 +25,19 @@ public class LoginActivity extends AppCompatActivity {
     private Button loginButton;
     private ProgressBar progressBar;
 
+    private BlogPreferences preferences;
+
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        preferences = new BlogPreferences(this);
+        if(preferences.isLoggedIn()){
+            startMainActivity();
+            finish();
+            return;
+        }
+
         setContentView(R.layout.activity_login);
 
         textUsernameLayout = findViewById(R.id.textUsernameLayout);
@@ -35,8 +46,8 @@ public class LoginActivity extends AppCompatActivity {
         loginButton.setOnClickListener(v -> onLoginClicked());
         progressBar = findViewById(R.id.progressBar);
 
-        textUsernameLayout.getEditText().addTextChangedListener(createTextWatcher(textUsernameLayout));
-        textPasswordInput.getEditText().addTextChangedListener(createTextWatcher(textPasswordInput));
+        Objects.requireNonNull(textUsernameLayout.getEditText()).addTextChangedListener(createTextWatcher(textUsernameLayout));
+        Objects.requireNonNull(textPasswordInput.getEditText()).addTextChangedListener(createTextWatcher(textPasswordInput));
 
     }
 
@@ -60,8 +71,8 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     private void onLoginClicked() {
-        String username = textUsernameLayout.getEditText().getText().toString();
-        String password = textPasswordInput.getEditText().getText().toString();
+        String username = Objects.requireNonNull(textUsernameLayout.getEditText()).getText().toString();
+        String password = Objects.requireNonNull(textPasswordInput.getEditText()).getText().toString();
         if (username.isEmpty()) {
             textUsernameLayout.setError("Username must not be empty");
         } else if (password.isEmpty()) {
@@ -74,6 +85,9 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     private void performLogin() {
+
+        preferences.setLoggedIn(true);
+
         textUsernameLayout.setEnabled(false);
         textPasswordInput.setEnabled(false);
         loginButton.setVisibility(View.INVISIBLE);
@@ -82,6 +96,7 @@ public class LoginActivity extends AppCompatActivity {
         Handler handler = new Handler();
         handler.postDelayed(() -> {
             startMainActivity();
+            finish();
         }, 2000);
     }
 
