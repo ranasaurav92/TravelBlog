@@ -1,7 +1,10 @@
 package com.example.tripplanner;
 
 import android.os.Bundle;
+import android.text.Html;
+import android.view.View;
 import android.widget.ImageView;
+import android.widget.ProgressBar;
 import android.widget.RatingBar;
 import android.widget.TextView;
 
@@ -11,6 +14,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.resource.bitmap.CircleCrop;
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions;
+import com.google.android.material.snackbar.Snackbar;
 
 import java.util.List;
 
@@ -25,11 +29,14 @@ public class BlogDetailsActivity extends AppCompatActivity {
     private RatingBar ratingBar;
     private ImageView imageAvatar;
     private ImageView imageMain;
+    private ProgressBar progressBar;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_blog_details);
+
+        progressBar = findViewById(R.id.progressBar);
 
         imageMain = findViewById(R.id.imageMain);
         imageAvatar = findViewById(R.id.imageAvatar);
@@ -57,19 +64,21 @@ public class BlogDetailsActivity extends AppCompatActivity {
 
             @Override
             public void onError() {
-
+                runOnUiThread(() -> showErrorSnackBar());
             }
         });
     }
 
     private void showData(Blog blog){
+        progressBar.setVisibility(View.GONE);
         textTitle.setText(blog.getTitle());
         textDate.setText(blog.getDate());
         textAuthor.setText(blog.getAuthor().getName());
         textRating.setText(String.valueOf(blog.getRating()));
         textViews.setText(String.format("(%d views)", blog.getViews()));
-        textDescription.setText(blog.getDescription());
+        textDescription.setText(Html.fromHtml(blog.getDescription()));
         ratingBar.setRating(blog.getRating());
+        ratingBar.setVisibility(View.VISIBLE);
 
         Glide.with(this)
                 .load(blog.getImage())
@@ -81,6 +90,18 @@ public class BlogDetailsActivity extends AppCompatActivity {
                 .transform(new CircleCrop())
                 .transition(DrawableTransitionOptions.withCrossFade())
                 .into(imageAvatar);
+    }
+
+    private void showErrorSnackBar(){
+        View rootView = findViewById(android.R.id.content);
+        Snackbar snackbar = Snackbar.make(rootView,
+                "Error loading blog article", Snackbar.LENGTH_INDEFINITE);
+        snackbar.setActionTextColor(getResources().getColor(R.color.orange500));
+        snackbar.setAction("Retry", v -> {
+            loadData();
+            snackbar.dismiss();
+        });
+        snackbar.show();
     }
 
 }
